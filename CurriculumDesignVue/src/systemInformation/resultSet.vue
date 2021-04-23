@@ -39,10 +39,10 @@
     
 </template>
 <style>
-#top{
+  #top{
   margin:1%;
-}
-#bottom{
+  }
+  #bottom{
   
   margin:1%;
   width:60%;  

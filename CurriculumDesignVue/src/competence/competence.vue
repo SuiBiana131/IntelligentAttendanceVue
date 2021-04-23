@@ -7,7 +7,7 @@
                   <el-menu-item index="/competence/updateCompetence"><i class="el-icon-setting"></i>班次管理</el-menu-item>
                   <el-menu-item index="/competence/workOvertime"><i class="el-icon-setting"></i>加班管理</el-menu-item>
                   <el-menu-item index="/competence/hoilday"><i class="el-icon-setting"></i>假期管理</el-menu-item>
-                  <el-menu-item index="/competence/design"><i class="el-icon-edit"></i>设计</el-menu-item>
+                  <!-- <el-menu-item index="/competence/design"><i class="el-icon-edit"></i>设计</el-menu-item> -->
                 </el-menu>
             </el-aside>
             <el-main>

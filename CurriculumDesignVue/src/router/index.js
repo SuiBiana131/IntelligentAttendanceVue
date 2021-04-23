@@ -22,6 +22,8 @@ import basicInformation from '@/systemInformation/basicInformation'
 import aflowSetting from '@/systemInformation/aflowSetting'
 import resultSet from '@/systemInformation/resultSet'
 import processDisplay from '@/systemInformation/processDisplay'
+import designCenter from '@/systemInformation/designCenter'
+import design from '@/systemInformation/design'
 
 import statistics from '@/statistics/statistics'
 import attendanceResult from '@/statistics/attendanceResult'
@@ -35,8 +37,7 @@ import updateCompetence from '@/competence/updateCompetence'
 import competenceGroup from '@/competence/competenceGroup'
 import workOvertime from '@/competence/workOvertime'
 import hoilday from '@/competence/hoilday'
-import designCenter from '@/competence/designCenter'
-import design from '@/competence/design'
+
 
 
 import attendanceInformation from '@/attendanceInformation/attendanceInformation'
@@ -141,6 +142,16 @@ const router = new Router({
               component: processDisplay,
               meta: { index: 2 },
             },
+            {
+              path: 'designCenter',
+              component: designCenter,
+              meta: { index: 22 },
+            },
+            {
+              path: 'design',
+              component: design,
+              meta: { index: 22 },
+            }
           ]
         },
         {
@@ -200,16 +211,6 @@ const router = new Router({
             {
               path: 'hoilday',
               component: hoilday,
-              meta: { index: 22 },
-            },
-            {
-              path: 'designCenter',
-              component: designCenter,
-              meta: { index: 22 },
-            },
-            {
-              path: 'design',
-              component: design,
               meta: { index: 22 },
             }
           ]

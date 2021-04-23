@@ -120,7 +120,7 @@
       }
     },methods: {
       handleClick(row) {
-        this.$router.push({path:'/competence/designCenter',query:{row}});
+        this.$router.push({path:'/systemInformation/designCenter',query:{row}});
       },
       moveTop(index, row) {
       if (index === 0) {

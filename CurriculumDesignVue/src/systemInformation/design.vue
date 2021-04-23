@@ -230,7 +230,7 @@
         console.log(list.select);
       },
       getDesign(){
-        this.$axios.post('http://localhost:8080/Design/selectByOid',this.$qs.stringify({oaId:this.oaId})).then(res => {
+        this.$axios.post('http://localhost:8080/Design/selectByOid',this.$qs.stringify({oaId:this.$route.query.oaId})).then(res => {
           if(res.data.length>0)
             this.lists=res.data;
           this.rightData = this.lists[0];
