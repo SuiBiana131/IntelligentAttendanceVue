@@ -6,24 +6,38 @@
         </div>
         <div id="bottom"> 
           <el-form :label-position="'top'" label-width="80px" >
-                <el-form-item  v-for="list in lists" :key="list.id" >                 
-                  <el-col :span='3'><span>{{list.title}}</span></el-col>
-                  <el-col :span='18' v-show="list.type=='1'"><el-input  v-model="list.content"></el-input></el-col>
-                  <el-col :span='18' v-show="list.type=='2'"><el-input-number  :step="2" v-model="list.content"></el-input-number>{{}}</el-col>
-                  <el-col :span='18' v-show="list.type=='3'">
+                <el-form-item  v-for="(list,num) in forms" :key="num" >                 
+                  <el-col :span='3'><span>{{lists[num].title}}</span></el-col>
+                  <el-col :span='18' v-show="lists[num].type=='单行输入框'"><el-input  v-model="list.content"></el-input></el-col>
+                  <el-col :span='18' v-show="lists[num].type=='数字输入框'"><el-input-number  :step="2" v-model="list.statrtTime"></el-input-number>{{}}</el-col>
+                  <el-col :span='18' v-show="lists[num].type=='选择框'">
                     <el-select   v-model="list.content" placeholder="请选择" >
                         <el-option
-                            v-for="item in options"
-                            :key="item.value"
-                            :label="item.label"
-                            :value="item.value">
+                            v-for="item in lists[num].select.split('-')"
+                            :key="item"
+                            :label="item"
+                            :value="item">
                         </el-option>
                     </el-select>
                   </el-col>
-                  <el-col :span='18' v-show="list.type=='4'" >
-                    <el-date-picker type="datetime" placeholder="选择日期时间" v-model="list.statrtTime"></el-date-picker>
+                  <el-col :span='18' v-show="lists[num].type=='日期'" >
+                    <el-date-picker type="datetime" placeholder="选择日期时间" v-model="list.content"></el-date-picker>
                   </el-col>
-                  <el-col :span='18' v-show="list.type=='5'">
+                  <el-col :span='18' v-show="lists[num].type=='日期区间'" >
+                    <el-date-picker type="datetimerange"  range-separator="至"  start-placeholder="开始日期"  end-placeholder="结束日期"
+                    v-model="list.dateList" value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
+                  </el-col>
+                  <el-col :span='18' v-show="lists[num].type=='单选框'" >
+                    <el-radio-group v-model="list.content">
+                      <el-radio v-for="(item,num) in lists[num].select.split('-')" :label="item" :key="num">{{item}}</el-radio>
+                    </el-radio-group>
+                  </el-col>
+                  <el-col :span='18' v-show="lists[num].type=='多选框'" >
+                    <el-checkbox-group v-model="list.checkList">
+                      <el-checkbox v-for="(item,num) in lists[num].select.split('-')" :label="item" :key="num"></el-checkbox>
+                    </el-checkbox-group>
+                  </el-col>
+                  <el-col :span='18' v-show="lists[num].type=='多行输入框'">
                     <el-input type="textarea" autosize placeholder="请输入内容" v-model="list.content"></el-input>
                   </el-col>
                 </el-form-item>
@@ -62,33 +76,15 @@
           statrtTime: '',
           endTime: '',
           optime: '',
-        },lists:[{
-            title:'原因',
-            type:'4',
-            tips:'',
-            unit:'',
-            select:'',
-            dateType:'',
-            startDate:'',
-            endDate:'',
-            id:1,
-            oaId:-1,
-        }],options: [{
+          checkList:[],
+          dateList:[],
+        },
+        lists:[],
+        options: [{
           value: '选项1',
           label: '黄金糕'
-        }, {
-          value: '选项2',
-          label: '双皮奶'
-        }, {
-          value: '选项3',
-          label: '蚵仔煎'
-        }, {
-          value: '选项4',
-          label: '龙须面'
-        }, {
-          value: '选项5',
-          label: '北京烤鸭'
         }],
+        fromApply:{}
       }
     },
     methods: {
@@ -100,32 +96,37 @@
         
       },init(){
         this.getDesign();
-        this.lists.forEach(list => {
-            this.$set(list,'content','')
-            this.$set(list,'statrtTime','')
-            this.$set(list,'endTime','')
-            this.$set(list,'optime','')
-            console.log( this.lists);
-          })  
       },
       getDesign(){
-        this.$axios.post('http://localhost:8080/Design/selectByOid',this.$qs.stringify({oaId:this.oaId})).then(res => {
-          this.lists=res.data;
+        this.$axios.post('http://localhost:8080/Design/selectByOid',this.$qs.stringify({oaId:this.fromApply.type})).then(res => {
+          this.lists=res.data ;
+          this.form.formid=this.fromApply.id;
+          this.lists.forEach(list => {
+           this.form.name=list.title;
+           this.forms.push(Object.assign({},this.form));
+          })
           console.log(res);        
       }).catch(res => {
       console.log(res)
       });
       },
+      updateFormapply() {
+        this.fromApply.status="未审批";
+        this.$axios.post('http://localhost:8080/Formapply/update',this.$qs.stringify(this.fromApply)).then(res => {
+         console.log(res);
+         this.$router.push({path:'/systemInformation/processDisplay'});
+        }).catch(res => {
+        console.log(res)
+      });
+      },
       updateDesign(){
-         this.lists.forEach(list => {
-           this.form.name=list.title;
-           this.form.content=list.content;
-           this.form.statrtTime=list.statrtTime;
-           this.form.endTime=list.endTime;
-           this.form.optime=list.optime;
-           this.forms.push(this.form);
-          })
-           console.log( this.forms);
+        this.forms.forEach(form => {
+          if(form.dateList.length>0)
+            form.content=form.dateList.join("到");
+          if(form.checkList.length>0)
+            form.content=form.checkList.join(",");
+        })
+        console.log(this.forms);
         this.$axios({
         url: 'http://localhost:8080/Formcontent/insert',
         method: 'post',
@@ -136,12 +137,14 @@
         },
       }).then(res => {
          console.log(res);
+         this.updateFormapply();
       }).catch(res => {
       console.log(res)
       });
       },
     },mounted() {
-        this.init();
+      this.fromApply = this.$route.query.row;
+        this.getDesign();
     }
   }
 </script>

@@ -9,7 +9,7 @@
             </div>
         </div>
         <div id="bottom2"> 
-            <el-table :data="tabledata"  style="width: 100%" >
+            <el-table :data="sheetForm"  style="width: 100%" >
               <el-table-column label="已启用">
                 <el-table-column prop="name" label="表单名称">
                 </el-table-column>
@@ -26,10 +26,11 @@
                    </el-button-group>
                   </template>
                 </el-table-column>
-                <el-table-column  label="操作" width="100">
+                <el-table-column  label="操作" width="150">
                   <template slot-scope="scope">
                     <el-button @click="handleClick(scope.row)" type="text" size="small">修改</el-button>
-                    <el-button  type="text" size="small">删除</el-button>
+                    <el-button @click="deleteSheet(scope.row)" type="text" size="small">删除</el-button>
+                    <el-button @click="updateSheet(scope.row)" type="text" size="small">停用</el-button>
                   </template>
                 </el-table-column>
               </el-table-column>
@@ -69,6 +70,8 @@
   export default {
     data() {
       return {
+        sheetForm:[],
+        notSheetForm:[],
         tabledata: [
           {
             name:'事假',
@@ -147,30 +150,51 @@
       }
     },
     getSheet(){
-        this.$axios.post('http://localhost:8080/Sheet/selectAll').then(res => {
+      this.$axios.post('http://localhost:8080/Sheet/selectAllByUse').then(res => {
           console.log(res);
-          this.tabledata=res.data;
-         
+          this.sheetForm=res.data;
       }).catch(res => {
       console.log(res)
       });
-      },
-      addSheet(){
+      this.$axios.post('http://localhost:8080/Sheet/selectAllByNotuse').then(res => {
+          console.log(res);
+          this.notSheetForm=res.data;
+      }).catch(res => {
+      console.log(res)
+      });
+      /**  this.$axios.post('http://localhost:8080/Sheet/selectAll').then(res => {
+          console.log(res);
+          this.tabledata=res.data;
+      }).catch(res => {
+      console.log(res)
+      }); */
+    },
+    addSheet(){
         this.$axios.post('http://localhost:8080/Sheet/insert',this.$qs.stringify(this.form)).then(res => {
          console.log(res);
          this.drawer = false;
+         this.getSheet();
       }).catch(res => {
       console.log(res)
       });
-      },
-      updateSheet(){
-        this.$axios.post('http://localhost:8080/Sheet/update',this.$qs.stringify(this.form)).then(res => {
+    },
+    updateSheet(row){
+      row.isUse=0;
+      this.$axios.post('http://localhost:8080/Sheet/update',this.$qs.stringify(row)).then(res => {
          console.log(res);
-         this.drawer = false;
+         this.getSheet();
       }).catch(res => {
       console.log(res)
       });
-      },
+    },
+    deleteSheet(row){
+        this.$axios.post('http://localhost:8080/Sheet/delete',this.$qs.stringify({id:row.id})).then(res => {
+         console.log(res);
+         this.getSheet();
+      }).catch(res => {
+      console.log(res)
+      });
+    },
     },mounted() {
     this.getSheet();   
    }

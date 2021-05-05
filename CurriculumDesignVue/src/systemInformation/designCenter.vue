@@ -22,8 +22,8 @@
                     <b>表单设计</b>
                 </el-form-item>
                 <el-form-item >
-                    <span>默认表单</span> 
-                    <el-button type="text" @click="preview">预览</el-button>
+                    <span v-show="this.lists.length>0">{{formLabelAlign.name}}表单</span> 
+                    <el-button type="text" @click="preview" v-show="this.lists.length>0">预览</el-button>
                     <router-link :to="{path:'design',query:{oaId:this.$route.query.row.id}}">
                       <el-button type="text"  v-show="this.lists.length>0">修改</el-button>
                     </router-link>
@@ -52,9 +52,9 @@
           <el-form :label-position="'top'" label-width="80px" >
                 <el-form-item  v-for="list in lists" :key="list.id" >                 
                   <el-col :span='3'><span>{{list.title}}</span></el-col>
-                  <el-col :span='18' v-show="list.type=='1'"><el-input  v-model="list.content"></el-input></el-col>
-                  <el-col :span='18' v-show="list.type=='2'"><el-input-number  :step="2" v-model="list.content"></el-input-number>{{}}</el-col>
-                  <el-col :span='18' v-show="list.type=='3'">
+                  <el-col :span='18' v-show="list.type=='单行输入框'"><el-input  v-model="list.content"></el-input></el-col>
+                  <el-col :span='18' v-show="list.type=='数字输入框'"><el-input-number  :step="2" v-model="list.content"></el-input-number>{{}}</el-col>
+                  <el-col :span='18' v-show="list.type=='选择框'">
                     <el-select   v-model="list.content" placeholder="请选择" >
                         <el-option
                             v-for="(item,num) in list.select.split('-')"
@@ -64,10 +64,24 @@
                         </el-option>
                     </el-select>
                   </el-col>
-                  <el-col :span='18' v-show="list.type=='4'" >
+                  <el-col :span='18' v-show="list.type=='日期'" >
                     <el-date-picker type="datetime" placeholder="选择日期时间" v-model="list.statrtTime"></el-date-picker>
                   </el-col>
-                  <el-col :span='18' v-show="list.type=='5'">
+                  <el-col :span='18' v-show="list.type=='日期区间'" >
+                    <el-date-picker type="datetimerange"  range-separator="至"  start-placeholder="开始日期"  end-placeholder="结束日期"
+                    v-model="list.statrtTime"  style="width:100%"></el-date-picker>
+                  </el-col>
+                  <el-col :span='18' v-show="list.type=='单选框'" >
+                    <el-radio-group v-model="list.content">
+                      <el-radio v-for="(item,num) in list.select.split('-')" :label="item" :key="num">{{item}}</el-radio>
+                    </el-radio-group>
+                  </el-col>
+                  <el-col :span='18' v-show="list.type=='多选框'" >
+                    <el-checkbox-group v-model="check">
+                      <el-checkbox v-for="(item,num) in list.select.split('-')" :label="item" :key="num"></el-checkbox>
+                    </el-checkbox-group>
+                  </el-col>
+                  <el-col :span='18' v-show="list.type=='多行输入框'">
                     <el-input type="textarea" autosize placeholder="请输入内容" v-model="list.content"></el-input>
                   </el-col>
                 </el-form-item>
@@ -138,6 +152,7 @@
         imageUrl:'',
         dialogFrom:false,
         lists:[],
+        check:[]
       }
     },methods: {
       handleClick(row) {
@@ -165,7 +180,14 @@
       });
       },
       addDesign(){
-
+        this.$axios.post('http://localhost:8080/Design/insert',
+          this.$qs.stringify({oaId:this.$route.query.row.id,title: "默认",type: "单行输入框",select:""})).then(res => {
+          this.lists=res.data;
+          console.log(res);
+          this.getDesign();        
+        }).catch(res => {
+        console.log(res)
+        });
       },
       preview(){
         this.dialogFrom=true;

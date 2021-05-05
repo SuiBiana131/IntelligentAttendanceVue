@@ -12,9 +12,9 @@
                 <el-checkbox v-for="city in cities" :label="city" :key="city">{{city}}</el-checkbox>
               </el-checkbox-group>
             </el-row>
-            <el-row><el-col :span="4">日期选择:</el-col>
-              <el-col :span="4">
-                <el-date-picker
+            <div class="pick">
+              <span>日期选择:</span>
+              <el-date-picker
                   size="mini"
                   v-model="dateValue"
                   type="daterange"
@@ -23,10 +23,11 @@
                   format="yyyy-MM-dd"
                   value-format="yyyy-MM-dd"
                   @change="dateChange"
-                  :default-time="['00:00:00', '00:00:00']">
-                </el-date-picker></el-col>
-                <el-col><el-button size="small" type="success" icon="el-icon-download" @click="exportData">导出数据</el-button></el-col>
-              </el-row>
+                  :default-time="['00:00:00', '00:00:00']"
+                  style="width:50%">
+              </el-date-picker>
+              <el-button size="small" type="success" icon="el-icon-download" @click="exportData">导出数据</el-button>
+            </div>
             <el-table :data="tableData" border style="width: 100%">
                 <el-table-column prop="id" label="序号" >
                 </el-table-column>
@@ -36,6 +37,13 @@
                 </el-table-column>
                 <el-table-column v-for="(item,index) in checkedCities":key="item.value" :prop=item :label=item width="180">
                 </el-table-column>
+                <el-table-column
+                  fixed="right"
+                  width="100">
+                  <template slot-scope="scope">
+                    <el-button size="small" icon="" @click="statisClick(scope.row)">图表</el-button>
+                  </template>
+                </el-table-column>
             </el-table>
             <el-pagination
             :page-size="3"
@@ -44,6 +52,9 @@
             :total="20">
             </el-pagination>
         </div>
+        <el-dialog class="dialogpie" title="每日考勤图" :visible.sync="echartsDialogVisible" width="50%" center>
+          <div id="mycharts"></div>
+        </el-dialog>
     </div>
 </template>
 <style>
@@ -66,8 +77,22 @@
 .el-row{
   margin-bottom:20px;
 }
+#mycharts {
+  
+  width: 100%;
+  height: 600px;
+
+}
+.pick{
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  overflow:auto;
+  margin-bottom:10px;
+}
 </style>
 <script>
+  import * as echarts from 'echarts'
   export default {
     data() {
       return {
@@ -107,7 +132,14 @@
           start:'78',
           end:'31',
           date:'67'
-        }]
+        }],
+        echartsDialogVisible:false,
+        piedate:[{value: 1048, name: '搜索引擎'},
+                        {value: 735, name: '直接访问'},
+                        {value: 580, name: '邮件营销'},
+                        {value: 484, name: '联盟广告'},
+                        {value: 300, name: '视频广告'},
+                        {value: 233, name: '手机推送'}]
       }
     },methods: {
       goBack() {
@@ -152,6 +184,51 @@
 	    // 去请求后端接口进行导出数据
         var url = "http://localhost:8080/StaffAttend/export?start=' + this.dateValue[0] + '&end=' + this.dateValue[1]";
 	      window.open("http://localhost:8080/StaffAttend/export?start="+this.dateValue[0]+"&end="+this.dateValue[1],'_self');
+      },
+      statisClick(row){
+        let res = [];
+        res.push({name:"上班缺卡天数",value:row.上班缺卡次数});res.push({name:"下班缺卡天数",value:row.下班缺卡次数});
+        res.push({name:"休息天数",value:row.休息天数});res.push({name:"早退天数",value:row.早退天数});res.push({name:"缺勤天数",value:row.缺勤天数});
+        res.push({name:"迟到天数",value:row.迟到天数});res.push({name:"出勤天数",value:row.出勤天数});
+        this.piedate=res;
+        this.echartsDialogVisible = true;
+        this.$nextTick(() => {
+          this.getPie();
+          
+        })
+      },
+      getPie() {
+        var myChart = echarts.init(document.getElementById('mycharts'))
+        var option = {
+            title: {
+                text: '每月考勤状况',
+                subtext: '刘泽榕',
+                left: 'center'
+            },
+            tooltip: {
+                trigger: 'item'
+            },
+            legend: {
+                orient: 'vertical',
+                left: 'left',
+            },
+            series: [
+                {
+                    name: '',
+                    type: 'pie',
+                    radius: '50%',
+                    data: this.piedate,
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }
+            ]
+        }
+        myChart.setOption(option)
       }
     },mounted() {
       //alert(this.dateValue[0]+this.dateValue[1]);

@@ -18,8 +18,7 @@
                 <el-col :span="8" ><el-button type="text">共{{tableData.length}}人</el-button></el-col>
               </template>
               <template slot-scope="scope">
-                <el-col :span="8" :offset="8"><el-button type="text" @click="handleClick(scope.row)"><i class="el-icon-user"></i>详细信息</el-button></el-col>
-                <el-col :span="8" :offset="0"><el-button type="text" @click="statisClick(scope.row)"><i class="el-icon-s-data"></i>统计</el-button></el-col>               
+                <el-col :span="8" :offset="8"><el-button type="text" @click="handleClick(scope.row)"><i class="el-icon-user"></i>详细信息</el-button></el-col>            
               </template>
             </el-table-column>
           </el-table>

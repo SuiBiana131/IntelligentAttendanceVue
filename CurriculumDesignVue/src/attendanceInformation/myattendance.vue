@@ -6,20 +6,18 @@
         </div>
         <div id="bottom"> 
              <div id="top-right">
-              <div id="date">
               <el-date-picker v-model="date" type="date" format="yyyy 年 MM 月 dd 日"
-      value-format="yyyy-MM-dd" placeholder="选择日期" >
+                  value-format="yyyy-MM-dd" placeholder="选择日期" >
               </el-date-picker>
-            </div>
-            <el-select placeholder="请选择状态"  v-model="state"  class="el">
-                  <el-option label="早退" value="早退">早退</el-option>
-                  <el-option label="迟到" value="迟到">迟到</el-option>
-                  <el-option label="缺席" value="缺席">缺席</el-option>
-                  <el-option label="请假" value="请假">请假</el-option>
-                  <el-option label="正常" value="正常">正常</el-option>
-                  <el-option label="迟到早退" value="迟到早退">迟到早退</el-option>
-            </el-select>
-            <el-button type="primary" @click="selectStaff" class="el" >查询</el-button>
+              <el-select placeholder="请选择状态"  v-model="state"  class="el">
+                    <el-option label="早退" value="早退">早退</el-option>
+                    <el-option label="迟到" value="迟到">迟到</el-option>
+                    <el-option label="缺席" value="缺席">缺席</el-option>
+                    <el-option label="请假" value="请假">请假</el-option>
+                    <el-option label="正常" value="正常">正常</el-option>
+                    <el-option label="迟到早退" value="迟到早退">迟到早退</el-option>
+              </el-select>
+              <el-button type="primary" @click="selectStaff" class="el" >查询</el-button>
             </div>
             <el-table :data="tableData" border style="width: 100%">
                 <el-table-column prop="userid" label="序号" width="180">
@@ -55,6 +53,8 @@
 #top-right{
   width:100%;  
   display: flex;
+  align-items:center;
+  overflow:auto;
 }
 .el{
   margin:4%;
@@ -84,7 +84,7 @@
         alert(this.date);
         this.$axios.post('http://localhost:8080/StaffAttend/selectCondition',this.$qs.stringify(
           {
-            userid:this.userid,
+            userid:1,
             state:this.state,
             date:this.date
           }

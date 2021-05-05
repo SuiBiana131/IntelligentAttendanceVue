@@ -5,12 +5,12 @@
         </div>
         <div id="prbottom"> 
           <el-col :span="8">
-            <el-select v-model="value" clearable placeholder="请选择">
+            <el-select v-model="type" clearable placeholder="请选择">
               <el-option
                 v-for="item in options"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value">
+                :key="item.id"
+                :label="item.name"
+                :value="item.id">
               </el-option>
             </el-select>
           </el-col >
@@ -42,7 +42,7 @@
             </el-table-column>
             <el-table-column
               label="审批时间"
-              prop="examinetime">
+              prop="examinetime" width="120">
             </el-table-column>
             <el-table-column
               label="状态"
@@ -51,9 +51,8 @@
             <el-table-column
               align="right" >
               <template slot-scope="scope">
-                <el-button
-                  size="mini"
-                  @click="handleDelete(scope.row)">删除</el-button>
+                <el-button  size="mini"  @click="handleDelete(scope.row)">删除</el-button>
+                <el-button  size="mini"  @click="onSubmit(scope.row)" v-show="scope.row.status=='未完善'">完善</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -97,36 +96,16 @@
             type: "请假",
             userid: 1,
             username: "刘泽榕"},
-        options: [{
-          id:1,
-          value: '事假11111111',
-          label: '黄金糕'
-        }, {
-          id:2,
-          value: '病假',
-          label: '双皮奶'
-        }, {
-          id:3,
-          value: '加班',
-          label: '蚵仔煎'
-        }, {
-          id:4,
-          value: '出差',
-          label: '龙须面'
-        }, {
-          id:5,
-          value: '事假',
-          label: '北京烤鸭'
-        }],
-        value: ''
+        options: [],
+        type: 1
       }
     },
     methods: {
       goBack() {
         console.log('go back');
       },
-      onSubmit() {
-        console.log('submit!');
+      onSubmit(row) {
+        this.$router.push({path:'/systemInformation/resultSet',query:{row}});
       },
       handleDelete(row) {
         row.isDelete=1;
@@ -138,18 +117,44 @@
       });
       },
       handleadd(){
-        
+        console.log(this.type)
+        let addForm = {applytime: "",isDelete: 0,name: "",status: "未完善",type: "",username: "",userid:0}
+        let date = new Date();
+        addForm.username = this.$store.state.user.username;
+        addForm.type = this.type;
+        addForm.name = addForm.username + "的"; 
+        for(let i=0;i<this.options.length;i++){
+          if(this.type==this.options[i].id){
+            addForm.name = addForm.name + this.options[i].name + "申请"
+          }
+        } 
+        addForm.applytime = date.getFullYear()+"-" + (date.getMonth() + 1)+ "-" +date.getDate() 
+        this.$axios.post('http://localhost:8080/Formapply/insert',this.$qs.stringify(addForm)).then(res => {
+          console.log(res);
+          this.getFormapply();
+          }).catch(res => {
+          console.log(res)
+        });
       },
       getFormapply(){
-        this.$axios.post('http://localhost:8080/Formapply/selectAlldelete',this.$qs.stringify({userid:1})).then(res => {
+        this.$axios.post('http://localhost:8080/Formapply/selectAlldelete',this.$qs.stringify({username:this.$store.state.user.username})).then(res => {
           this.tableData=res.data;
          console.log(res);
       }).catch(res => {
       console.log(res)
       });
       },
+      getSheet(){
+        this.$axios.post('http://localhost:8080/Sheet/selectAllByUse').then(res => {
+            console.log(res);
+            this.options=res.data;
+        }).catch(res => {
+        console.log(res)
+        });
+      }
     },mounted() {
     this.getFormapply();   
+    this.getSheet();
    } 
   }
 </script>

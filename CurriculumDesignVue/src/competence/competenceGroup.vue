@@ -201,12 +201,12 @@
 </div>
 </template>
 <style>
-    .form3{
-    }
-    .el-row{
+  .form3{
+  }
+  .el-row{
       margin-top:20px;
-    }
-    #container{
+  }
+  #container{
     /*地图(容器)显示大小*/
     width:100%;
     height:400px;

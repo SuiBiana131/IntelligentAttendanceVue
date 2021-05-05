@@ -3,20 +3,20 @@
         <div class="designLeft">
             <b>基础组件</b>
             <el-row :gutter="20">
-                <el-button class="designBasic" icon="el-icon-edit" @click="onSubmit('1')">单行输入框</el-button>
-                <el-button class="designBasic" icon="el-icon-tickets" @click="onSubmit('5')">多行输入框</el-button>
+                <el-button class="designBasic" icon="el-icon-edit" @click="onSubmit('单行输入框')">单行输入框</el-button>
+                <el-button class="designBasic" icon="el-icon-tickets" @click="onSubmit('多行输入框')">多行输入框</el-button>
             </el-row>
             <el-row :gutter="20">
-                <el-button class="designBasic" icon="el-icon-s-data" @click="onSubmit('2')">数字输入框</el-button>
-                <el-button class="designBasic" icon="el-icon-check" @click="onSubmit('3')">单选框</el-button>
+                <el-button class="designBasic" icon="el-icon-s-data" @click="onSubmit('数字输入框')">数字输入框</el-button>
+                <el-button class="designBasic" icon="el-icon-check" @click="onSubmit('单选框')">单选框</el-button>
             </el-row>
             <el-row :gutter="20">
-                <el-button class="designBasic" icon="el-icon-circle-check" @click="onSubmit('3')">多选框</el-button>
-                <el-button class="designBasic" icon="el-icon-date" @click="onSubmit('4')">日期</el-button>
+                <el-button class="designBasic" icon="el-icon-circle-check" @click="onSubmit('多选框')">多选框</el-button>
+                <el-button class="designBasic" icon="el-icon-date" @click="onSubmit('日期')">日期</el-button>
             </el-row>
             <el-row :gutter="20">
-                <el-button class="designBasic" icon="el-icon-s-claim" @click="onSubmit('4')">日期区间</el-button>
-                <el-button class="designBasic" icon="el-icon-mobile-phone" @click="onSubmit('1')">电话</el-button>
+                <el-button class="designBasic" icon="el-icon-s-claim" @click="onSubmit('日期区间')">日期区间</el-button>
+                <el-button class="designBasic" icon="el-icon-arrow-down" @click="onSubmit('选择框')">选择框</el-button>
             </el-row>
         </div>
         <div class="designCenter">
@@ -177,7 +177,7 @@
             id:1,
             oaId:-1};
           newNum.id=this.id;
-          newNum.oaId=this.oaId;
+          newNum.oaId=Number(this.$route.query.oaId);
           newNum.type=type;
           this.lists.push(newNum);
           console.log(newNum);
@@ -206,16 +206,21 @@
         console.log(this.$refs.lzr._data);
       },
       deleteItem(list,value){
-        list.select="";
+        if(this.$refs.lzr.select1.length==1){
+          list.select="";
+          return;
+        }
+        let res="";
         for(var i=0;i<this.$refs.lzr.select1.length;i++){
           if(this.$refs.lzr.select1[i].num==value.num){
             this.$refs.lzr.select1.splice(i,1);
-            list.select=list.select+this.$refs.lzr.select1[i].value+"-";
+            if(this.$refs.lzr.select1.length!=0)
+              res=res+this.$refs.lzr.select1[i].value+"-";
             continue;
           }
-          list.select=list.select+this.$refs.lzr.select1[i].value+"-";
+          res=res+this.$refs.lzr.select1[i].value+"-";
         }
-        list.select = list.select.slice(0,list.select.length-1);
+        list.select = res.slice(0,res.length-1);
         console.log(value);
       },
       updateitem(list,item){
@@ -253,6 +258,7 @@
       }).catch(res => {
       console.log(res)
       });
+      this.$router.push('/systemInformation/aflowSetting');
       },
       init(){
         this.getDesign();
