@@ -130,7 +130,7 @@
           thisCancas: null,
           videoWidth: 500,
           videoHeight: 400,
-
+          imgSrc:'',
           lists:[{
             title:'原因',
             type:'4',

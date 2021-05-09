@@ -3,7 +3,7 @@
     <div id="a">
         <div id="top">
           <div class="top-left">
-            <el-page-header @back="goBack" content="考勤设置"></el-page-header>
+            <el-page-header @back="goBack" content="分组设置"></el-page-header>
           </div>
           <div class="top-right">
             <el-button style="float: right; padding: 0px 10px" type="text" @click="getGroup()">考勤组分配</el-button>

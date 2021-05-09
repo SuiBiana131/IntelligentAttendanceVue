@@ -62,13 +62,26 @@
               <el-button type="primary" @click="onSubmit">发布签到</el-button>
             </div>
     </el-dialog>  
-    <el-dialog title="考勤" :visible.sync="dialogAttendance" width="50%" center>
+    <el-dialog title="考勤" :visible.sync="dialogAttendance" width="50%" center @close="onCancel">
       <div class="dialog-center">
         <el-tabs v-model="activeName" @tab-click="tabclick">
           <el-tab-pane label="定位考勤" name="定位考勤" :disabled = "attendanceType[0]!=='1'">
             <div id="container"></div>
           </el-tab-pane>
-          <el-tab-pane label="人脸考勤" name="人脸考勤" :disabled = "attendanceType[1]!=='2'">人脸考勤</el-tab-pane>
+          <el-tab-pane label="人脸考勤" name="人脸考勤" :disabled = "attendanceType[1]!=='2'">
+            <div id="aiContainer">
+              <div class="box" style="display:flex">
+                <video id="videoCamera" class="canvas" :width="videoWidth" :height="videoHeight" autoPlay></video>
+                <canvas id="canvasCamera" class="canvas" :width="videoWidth" :height="videoHeight"></canvas>
+              </div>
+              <div style="width:50%;margin-left:25%;margin-top:30px;display:flex;justify-content: space-between;">
+                <el-button @click="drawImage" icon="el-icon-camera" size="small">拍照</el-button>
+                <el-button v-if="os"  @click="getCompetence"  icon="el-icon-video-camera" size="small">打开摄像头</el-button>
+                <el-button v-else @click="stopNavigator" icon="el-icon-switch-button" size="small">关闭摄像头</el-button>
+                <el-button @click="resetCanvas" icon="el-icon-refresh" size="small">重置</el-button>
+              </div>
+            </div>
+          </el-tab-pane>
         </el-tabs>
       </div>
       <div slot="footer" class="dialog-footer">
@@ -109,6 +122,16 @@ export default {
       circle:{},
       center:'',
       radius:1500,
+      attmaps:[],//考勤圆心
+      //摄像头控制数据
+      os: false,//控制摄像头开关
+      thisVideo: null,
+      thisContext: null,
+      thisCancas: null,
+      videoWidth: 350,
+      videoHeight: 350,
+      imgSrc:'',
+      mathScore:0,//人脸识别相似度分数
     }
   },
   watch: {
@@ -127,7 +150,7 @@ export default {
     },
     sign(){
         if(this.date1=='')
-          alert("日期为空！");
+          alert("日期为空！考勤失败");
         else{
         this.$axios.post('http://localhost:8080/StaffAttend/sign',this.$qs.stringify(
         {
@@ -142,7 +165,39 @@ export default {
       });}
     },
     preSign(){
-      console.log(this.activeName);
+      if(this.activeName=="定位考勤"){
+        if(!this.map.id)
+          alert("未定位！");
+        else if(this.attmaps.some(circle=>{return TMap.geometry.computeDistance([this.center,circle.center])<=circle.radius;})){   
+          this.sign();
+          this.onCancel();
+        }
+        else
+          alert("不在考勤范围内");  
+      }
+      else if(this.activeName=="人脸考勤"){
+          this.getMathScore();
+      }
+      else
+          alert("请选择你的考勤方式");  
+    },
+    getMathScore(){
+      this.$axios.post('http://localhost:8080/StaffAttend/getMathScore',this.$qs.stringify({
+          username:this.$store.state.user.username,
+          ailogin:this.imgSrc}
+      )).then(res => {
+        this.mathScore = res.data;
+        console.log(res.data);
+        if(this.mathScore>80){
+          this.sign();
+          this.onCancel();
+        }
+        else
+          alert("人脸识别错误请重新拍照！");
+      }).catch(res => {
+        console.log(res)
+        return 0;
+      });
     },
     exit(){
       this.$router.push('/login')
@@ -217,7 +272,9 @@ export default {
     tabclick(tab, event) {
         console.log(tab.name);
         if(tab.name=="定位考勤"&&!this.map.id)
-            this.getAddress();
+          this.getAddress();
+        else if(tab.name=="人脸考勤")
+          this.onTake();
     },
     //地图方法
     getAddress(){         
@@ -248,7 +305,7 @@ export default {
     loadScript() {
           var script = document.createElement("script");
           script.type = "text/javascript";
-          script.src = "https://map.qq.com/api/gljs?v=1.exp&key=B3GBZ-M6EC6-3GES4-M2P2N-L6BY3-2IB6T&callback=init";
+          script.src = "https://map.qq.com/api/gljs?v=1.exp&key=B3GBZ-M6EC6-3GES4-M2P2N-L6BY3-2IB6T&libraries=geometry";
           script.onload = script.onreadystatechange = () => {
               if (!this.readyState || this.readyState === "loaded" || this.readyState === "complete" ) {
                   this.initMap();
@@ -268,13 +325,12 @@ export default {
               //pitch: 43.5,  //设置俯仰角
               //rotation: 45    //设置地图旋转角度
           });
-          let attmaps = [];
           this.Mappoints.forEach((Mappoint)=>{
             let attmap={id:0,styleId: 'circle',center: this.center,radius: 1500,}
             attmap.id=Mappoint.id;attmap.radius=parseInt(Mappoint.radius);
             //console.log(parseFloat(attmap.lat).toFixed(6));
             attmap.center=new TMap.LatLng(parseFloat(Mappoint.lat),parseFloat(Mappoint.lng));
-            attmaps.push(attmap);
+            this.attmaps.push(attmap);
           })
           this.circle = new TMap.MultiCircle({ 
             map:this.map,
@@ -286,7 +342,7 @@ export default {
               'borderWidth': 2,
             }),
             },
-            geometries: attmaps,
+            geometries: this.attmaps,
           });
           this.markerLayer = new TMap.MultiMarker({
             map: this.map,  //指定地图容器
@@ -317,7 +373,105 @@ export default {
       }).catch(res => {
       console.log(res)
       });
+    },
+    /*调用摄像头拍照开始*/
+      onTake() {
+        this.getCompetence();
       },
+      onCancel() {
+        this.stopNavigator();
+        this.dialogAttendance = false;
+      },
+      // 调用摄像头权限
+      getCompetence() {
+        //必须在model中render后才可获取到dom节点,直接获取无法获取到model中的dom节点
+        this.$nextTick(() => {
+          const _this = this;
+          this.os = false;//切换成关闭摄像头
+          this.thisCancas = document.getElementById('canvasCamera');
+          this.thisContext = this.thisCancas.getContext('2d');
+          this.thisVideo = document.getElementById('videoCamera');
+          // 旧版本浏览器可能根本不支持mediaDevices，我们首先设置一个空对象
+          if (navigator.mediaDevices === undefined) {
+            navigator.menavigatordiaDevices = {}
+          }
+          // 一些浏览器实现了部分mediaDevices，我们不能只分配一个对象
+          // 使用getUserMedia，因为它会覆盖现有的属性。
+          // 这里，如果缺少getUserMedia属性，就添加它。
+          if (navigator.mediaDevices.getUserMedia === undefined) {
+            navigator.mediaDevices.getUserMedia = function (constraints) {
+              // 首先获取现存的getUserMedia(如果存在)
+              let getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.getUserMedia;
+              // 有些浏览器不支持，会返回错误信息
+              // 保持接口一致
+              if (!getUserMedia) {
+                return Promise.reject(new Error('getUserMedia is not implemented in this browser'))
+              }
+              // 否则，使用Promise将调用包装到旧的navigator.getUserMedia
+              return new Promise(function (resolve, reject) {
+                getUserMedia.call(navigator, constraints, resolve, reject)
+              })
+            }
+          }
+          const constraints = {
+            audio: false,
+            video: {width: _this.videoWidth, height: _this.videoHeight, transform: 'scaleX(-1)'}
+          };
+          navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
+            // 旧的浏览器可能没有srcObject
+            if ('srcObject' in _this.thisVideo) {
+              _this.thisVideo.srcObject = stream
+            } else {
+              // 避免在新的浏览器中使用它，因为它正在被弃用。
+              _this.thisVideo.src = window.URL.createObjectURL(stream)
+            }
+            _this.thisVideo.onloadedmetadata = function (e) {
+              _this.thisVideo.play()
+            }
+          }).catch(err => {
+            this.$notify({
+              title: '警告',
+              message: '没有开启摄像头权限或浏览器版本不兼容.',
+              type: 'warning'
+            });
+          });
+        });
+      },
+      //绘制图片
+      drawImage() {
+        // 点击，canvas画图
+        this.thisContext.drawImage(this.thisVideo, 0, 0, this.videoWidth, this.videoHeight);
+        // 获取图片base64链接
+        this.imgSrc = this.thisCancas.toDataURL('image/png');
+        /*const imgSrc=this.imgSrc;*/
+      },
+      //清空画布
+      clearCanvas(id) {
+        let c = document.getElementById(id);
+        let cxt = c.getContext("2d");
+        cxt.clearRect(0, 0, c.width, c.height);
+      },
+      //重置画布
+      resetCanvas() {
+        this.imgSrc = "";
+        this.clearCanvas('canvasCamera');
+      },
+      //关闭摄像头
+      stopNavigator() {
+        if (this.thisVideo && this.thisVideo !== null) {
+          this.thisVideo.srcObject.getTracks()[0].stop();
+          this.os = true;//切换成打开摄像头
+        }
+      },
+      /*调用摄像头拍照结束*/
+      up(){
+        this.onCancel();
+        this.$axios.post('http://localhost:8080/Information/FaceSearch',this.$qs.stringify({image:this.imgSrc})).then(res => {
+         console.log(res); 
+      }).catch(res => {
+      console.log(res)
+      });
+      }
   },
   mounted() {
     this.currentTime(); 
@@ -401,14 +555,17 @@ export default {
   align-items: center;
 }
 .dialog-center{
-  height:350px;
+  height:450px;
 
 }
 #container{
     /*地图(容器)显示大小*/
     width:100%;
-    height:300px;
+    height:400px;
     margin-bottom:40px;
+}
+.aiContainer{
+  height:400px;
 }
 .el-menu-item
 {

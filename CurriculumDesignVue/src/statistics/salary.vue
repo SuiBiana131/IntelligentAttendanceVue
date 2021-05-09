@@ -18,7 +18,7 @@
       title="拍照上传"
       :visible.sync="visible"
       @close="onCancel"
-      width="1065px">
+      width="50%">
       <div class="box">
         <video id="videoCamera" class="canvas" :width="videoWidth" :height="videoHeight" autoPlay></video>
         <canvas id="canvasCamera" class="canvas" :width="videoWidth" :height="videoHeight"></canvas>
@@ -72,8 +72,8 @@
         thisVideo: null,
         thisContext: null,
         thisCancas: null,
-        videoWidth: 500,
-        videoHeight: 400,
+        videoWidth: 350,
+        videoHeight: 350,
       };
     },
     created() {

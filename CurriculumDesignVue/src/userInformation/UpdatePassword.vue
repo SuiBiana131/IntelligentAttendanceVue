@@ -25,7 +25,7 @@
               <el-col :span="7">
                 <span >{{userData.userid}}</span>
               </el-col>
-              <el-col :span="4" :offset="2"><span>姓名：</span></el-col>
+              <el-col :span="4" :offset="2"><span>昵称：</span></el-col>
               <el-col :span="7" ><el-input v-model="userData.nickname" placeholder="请输入内容" v-show="dataInput" size="mini"></el-input>
                 <span v-show="dataView">{{userData.nickname}}</span>
               </el-col>
@@ -102,19 +102,19 @@
                 v-model="userData.isailogin"
                 active-color="#13ce66"
                 inactive-color="#ff4949"
-                active-value="1"
-                inactive-value="0">
+                :active-value="1"
+                :inactive-value="0">
               </el-switch>
               <el-upload
                 class="avatar-uploader"
-                action="http://localhost:8080/Information/aiAdd"
+                action="http://localhost:8080/Information/aiLoginShow"
                 :show-file-list="false"
                 :on-success="onSubmit"
                 v-show="userData.isailogin==1">
-                <img v-if="imageUrl" :src="imageUrl" class="avatar">
+                <img style="width: 100px; height: 100px" v-if="userData.ailogin" :src="userData.ailogin" class="avatar">
                 <i v-else class="el-icon-plus avatar-uploader-icon"></i>
               </el-upload>
-              <el-button size="mini"  v-show="dataView" @click="onSubmit">修改</el-button>
+              <el-button size="mini"   @click="onTake" v-show="userData.isailogin==1">拍照上传</el-button>
             </div>
           </div>
           <el-divider></el-divider>
@@ -145,9 +145,34 @@
             </div>
           </div>
         </div>
+        <el-dialog
+          title="拍照上传"
+          :visible.sync="visible"
+          @close="onCancel"
+          width="1065px">
+          <div class="box">
+            <video id="videoCamera" class="canvas" :width="videoWidth" :height="videoHeight" autoPlay></video>
+            <canvas id="canvasCamera" class="canvas" :width="videoWidth" :height="videoHeight"></canvas>
+          </div>
+          <div slot="footer">
+            <el-button  @click="drawImage"  icon="el-icon-camera"  size="small">
+              拍照
+            </el-button>
+            <el-button  v-if="os"  @click="getCompetence"  icon="el-icon-video-camera"  size="small">
+              打开摄像头
+            </el-button>
+            <el-button  v-else  @click="stopNavigator"  icon="el-icon-switch-button"  size="small">
+              关闭摄像头
+            </el-button>
+            <el-button  @click="resetCanvas"  icon="el-icon-refresh"  size="small">
+              重置
+            </el-button>
+            <el-button  @click="up"  icon="el-icon-circle-close"  size="small">
+              完成
+            </el-button>
+          </div>
+        </el-dialog>
     </div>
-    
-    
 </template>
 <script>
   export default {
@@ -161,7 +186,16 @@
         dataView:true,
         userData:[],
         isPassword:false,
-        imageUrl:'',
+        //摄像头数据
+        visible: false,//弹窗
+        loading: false,//上传按钮加载
+        os: false,//控制摄像头开关
+        thisVideo: null,
+        thisContext: null,
+        thisCancas: null,
+        videoWidth: 500,
+        videoHeight: 400,
+        imgSrc:'',
       }
     },methods: {
       shfit(str)
@@ -178,13 +212,15 @@
       goBack() {
         console.log('go back');
       },
-      onSubmit() {
-        this.$axios.post('http://localhost:8080/Information/aiAdd',this.$qs.stringify({str:'32'}
+      onSubmit(response, file, fileList) {
+        this.userData.ailogin='http://localhost:8080/aiLogin/'+file.name;
+        this.updateInformation();
+        /*this.$axios.post('http://localhost:8080/Information/aiAdd',this.$qs.stringify({str:'32'}
           )).then(res => {
           console.log(res);
       }).catch(res => {
       console.log(res)
-      });
+      });*/
       },
       changePassWord(){
         this.isPassword=!this.isPassword;
@@ -210,10 +246,10 @@
         alert("请比较两次新密码！")
       },
       getuserInformation(){
-        this.$axios.post('http://localhost:8080/Information/select',this.$qs.stringify({id:1}
+        this.$axios.post('http://localhost:8080/Information/selectName',this.$qs.stringify({username:this.$store.state.user.username}
           )).then(res => {
-            this.userData=res.data;
-          console.log(res);
+          this.userData=res.data;
+          console.log(res.data);
       }).catch(res => {
       console.log(res)
       });
@@ -232,11 +268,114 @@
         this.userData.headshow='http://localhost:8080/upload/'+file.name;
         this.updateInformation();
         alert(file.name);
-      },
+    },
       beforeAvatarUpload(){
 
-      }
     },
+    onTake() {
+        this.visible = true;
+        this.getCompetence();
+      },
+      onCancel() {
+        this.visible = false;
+        this.stopNavigator();
+
+      },
+      // 调用摄像头权限
+      getCompetence() {
+        //必须在model中render后才可获取到dom节点,直接获取无法获取到model中的dom节点
+        this.$nextTick(() => {
+          const _this = this;
+          this.os = false;//切换成关闭摄像头
+          this.thisCancas = document.getElementById('canvasCamera');
+          this.thisContext = this.thisCancas.getContext('2d');
+          this.thisVideo = document.getElementById('videoCamera');
+          // 旧版本浏览器可能根本不支持mediaDevices，我们首先设置一个空对象
+          if (navigator.mediaDevices === undefined) {
+            navigator.menavigatordiaDevices = {}
+          }
+          // 一些浏览器实现了部分mediaDevices，我们不能只分配一个对象
+          // 使用getUserMedia，因为它会覆盖现有的属性。
+          // 这里，如果缺少getUserMedia属性，就添加它。
+          if (navigator.mediaDevices.getUserMedia === undefined) {
+            navigator.mediaDevices.getUserMedia = function (constraints) {
+              // 首先获取现存的getUserMedia(如果存在)
+              let getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.getUserMedia;
+              // 有些浏览器不支持，会返回错误信息
+              // 保持接口一致
+              if (!getUserMedia) {
+                return Promise.reject(new Error('getUserMedia is not implemented in this browser'))
+              }
+              // 否则，使用Promise将调用包装到旧的navigator.getUserMedia
+              return new Promise(function (resolve, reject) {
+                getUserMedia.call(navigator, constraints, resolve, reject)
+              })
+            }
+          }
+          const constraints = {
+            audio: false,
+            video: {width: _this.videoWidth, height: _this.videoHeight, transform: 'scaleX(-1)'}
+          };
+          navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
+            // 旧的浏览器可能没有srcObject
+            if ('srcObject' in _this.thisVideo) {
+              _this.thisVideo.srcObject = stream
+            } else {
+              // 避免在新的浏览器中使用它，因为它正在被弃用。
+              _this.thisVideo.src = window.URL.createObjectURL(stream)
+            }
+            _this.thisVideo.onloadedmetadata = function (e) {
+              _this.thisVideo.play()
+            }
+          }).catch(err => {
+            this.$notify({
+              title: '警告',
+              message: '没有开启摄像头权限或浏览器版本不兼容.',
+              type: 'warning'
+            });
+          });
+        });
+      },
+      //绘制图片
+      drawImage() {
+        // 点击，canvas画图
+        this.thisContext.drawImage(this.thisVideo, 0, 0, this.videoWidth, this.videoHeight);
+        // 获取图片base64链接
+        this.imgSrc = this.thisCancas.toDataURL('image/png');
+        /*const imgSrc=this.imgSrc;*/
+      },
+      //清空画布
+      clearCanvas(id) {
+        let c = document.getElementById(id);
+        let cxt = c.getContext("2d");
+        cxt.clearRect(0, 0, c.width, c.height);
+      },
+      //重置画布
+      resetCanvas() {
+        this.imgSrc = "";
+        this.clearCanvas('canvasCamera');
+      },
+      //关闭摄像头
+      stopNavigator() {
+        if (this.thisVideo && this.thisVideo !== null) {
+          this.thisVideo.srcObject.getTracks()[0].stop();
+          this.os = true;//切换成打开摄像头
+        }
+      },
+      /*调用摄像头拍照结束*/
+      up(){
+        this.onCancel();
+        this.$axios.post('http://localhost:8080/Information/photograph',this.$qs.stringify({imageUrl:this.imgSrc,
+        name:this.$store.state.user.username+'.jpg'}
+        )).then(res => {
+        this.userData.ailogin='http://localhost:8080/aiLogin/'+this.$store.state.user.username+'.jpg';
+        this.updateInformation();
+        console.log(res);
+      }).catch(res => {
+         console.log(res)
+      });
+      },  
+  },
      mounted() {
        this.getuserInformation();
   }
