@@ -1,3 +1,5 @@
+智能考勤系统的前端代码，后端代码在[此处](https://github.com/SuiBiana131/IntelligentAttendanceJava)
+
 登陆页面，可以选择密码登陆或者人脸登陆，人脸登录需要在个人信息中上传用于认证的头像后才会能正确使用
 ![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/登陆.png)
 所有成员的信息
