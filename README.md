@@ -1,1 +1,17 @@
-# IntelligentAttendanceVue
+#登陆页面
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/登陆.png)
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/所有人员信息.png)
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/人员分组.png)
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/考勤组.png)
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/考勤组详细信息.png)
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/定位.png)
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/班次管理.png)
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/表单管理.png)
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/表单设计1.png)
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/表单设计2.png)
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/表单审批1.png)
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/表单审批2.png)
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/数据统计.png)
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/数据统计图.png)
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/人脸考勤.png)
+![image](https://github.com/SuiBiana131/IntelligentAttendanceVue/blob/master/CurriculumDesignVue/show/地点考勤.png)
